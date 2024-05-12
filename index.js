@@ -67,12 +67,30 @@ async function run() {
             const assignment = req.body;
             const updatedItem = {
                 $set: {
-                    title: assignment.title,
-                    marks: assignment.marks,
-                    description: assignment.description,
-                    thumbnail_url: assignment.thumbnail_url,
-                    difficulty_level: assignment.difficulty_level,
-                    due_date: assignment.due_date
+                    title: assignment?.title,
+                    marks: assignment?.marks,
+                    description: assignment?.description,
+                    thumbnail_url: assignment?.thumbnail_url,
+                    difficulty_level: assignment?.difficulty_level,
+                    due_date: assignment?.due_date,
+                    status: assignment?.status,
+                    obtained_mark: assignment?.obtained_mark,
+                    submitter_email: assignment?.submitter_email
+                },
+            };
+            const result = await createdAssignments.updateOne(query, updatedItem, options);
+            res.send(result);
+        })
+        app.put('/attemptedAssignments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const assignment = req.body;
+            const updatedItem = {
+                $set: {
+                    status: assignment?.status,
+                    submitter_email: assignment?.submitter_email,
+                    file: assignment?.file
                 },
             };
             const result = await createdAssignments.updateOne(query, updatedItem, options);
