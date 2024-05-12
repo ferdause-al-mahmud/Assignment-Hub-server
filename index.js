@@ -42,10 +42,10 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         })
-        app.get('/assignments/:id', async (req, res) => {
+        app.get('/allAssignments/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await collection.findOne(query);
+            const result = await createdAssignments.findOne(query);
             res.send(result);
         })
         app.post('/allAssignments', async (req, res) => {
@@ -53,6 +53,32 @@ async function run() {
             const result = await createdAssignments.insertOne(newitem);
             res.send(result);
         })
+
+        app.delete('/allAssignments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await createdAssignments.deleteOne(query);
+            res.send(result);
+        })
+        app.put('/allAssignments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const assignment = req.body;
+            const updatedItem = {
+                $set: {
+                    title: assignment.title,
+                    marks: assignment.marks,
+                    description: assignment.description,
+                    thumbnail_url: assignment.thumbnail_url,
+                    difficulty_level: assignment.difficulty_level,
+                    due_date: assignment.due_date
+                },
+            };
+            const result = await createdAssignments.updateOne(query, updatedItem, options);
+            res.send(result);
+        })
+
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
