@@ -26,6 +26,7 @@ async function run() {
         // await client.db("admin").command({ ping: 1 });
         const collection = client.db("assignmentHub").collection("assignments");
         const createdAssignments = client.db("assignmentHub").collection("created");
+        const submittedCollections = client.db("assignmentHub").collection("submittedAssignments");
 
         app.get('/assignments', async (req, res) => {
             const cursor = collection.find();
@@ -81,7 +82,47 @@ async function run() {
             const result = await createdAssignments.updateOne(query, updatedItem, options);
             res.send(result);
         })
-        app.put('/attemptedAssignments/:id', async (req, res) => {
+
+
+        //submitted assignments
+
+        app.get('/attemptedAssignments', async (req, res) => {
+            const cursor = submittedCollections.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.post('/attemptedAssignments', async (req, res) => {
+            const newitem = req.body;
+            const result = await submittedCollections.insertOne(newitem);
+            res.send(result);
+        })
+
+
+        app.get('/attemptedAssignments/:email', async (req, res) => {
+            const submitter = req.params.email;
+            const query = { submitter_email: submitter };
+            const cursor = submittedCollections.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+        app.get('/pendingAssignments', async (req, res) => {
+            const { status } = req.query;
+            let query = {};
+            if (status) {
+                query = { status: status };
+            }
+            const cursor = submittedCollections.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+        app.get('/pendingAssignments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await submittedCollections.findOne(query);
+            res.send(result);
+        })
+        app.put('/pendingAssignments/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const options = { upsert: true };
@@ -89,14 +130,13 @@ async function run() {
             const updatedItem = {
                 $set: {
                     status: assignment?.status,
-                    submitter_email: assignment?.submitter_email,
-                    file: assignment?.file
+                    obtained_mark: assignment?.obtained_mark,
+                    feedback: assignment?.feedback,
                 },
             };
-            const result = await createdAssignments.updateOne(query, updatedItem, options);
+            const result = await submittedCollections.updateOne(query, updatedItem, options);
             res.send(result);
         })
-
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
